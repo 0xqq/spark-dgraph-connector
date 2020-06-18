@@ -20,6 +20,7 @@ package uk.co.gresearch.spark.dgraph
 import java.util.UUID
 
 import com.google.gson.{Gson, JsonArray, JsonObject}
+import io.dgraph.DgraphProto.TxnContext
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 import org.scalatest.{BeforeAndAfterAll, Suite}
@@ -27,7 +28,7 @@ import requests.{RequestBlob, Response}
 import uk.co.gresearch.spark.dgraph.DgraphTestCluster.isDgraphClusterRunning
 import uk.co.gresearch.spark.dgraph.connector.encoder.{JsonNodeInternalRowEncoder, StringTripleEncoder}
 import uk.co.gresearch.spark.dgraph.connector.executor.DgraphExecutor
-import uk.co.gresearch.spark.dgraph.connector.{ClusterStateProvider, GraphQl, Target, Uid}
+import uk.co.gresearch.spark.dgraph.connector.{ClusterStateProvider, GraphQl, Target, Transaction, Uid}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -95,7 +96,8 @@ trait DgraphTestCluster extends BeforeAndAfterAll { this: Suite =>
 
     @tailrec
     def attempt(no: Int, limit: Int): Uid = {
-      val json = DgraphExecutor(Seq(Target(cluster.grpc))).query(query)
+      val transaction = Transaction(TxnContext.newBuilder().build())
+      val json = DgraphExecutor(transaction, Seq(Target(cluster.grpc))).query(query)
       println(s"dgraph.graphql.schema node: $json")
 
       val encoder = TestEncoder()
