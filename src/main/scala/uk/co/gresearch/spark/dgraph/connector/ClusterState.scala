@@ -64,6 +64,7 @@ object ClusterState {
       .map(_.getValue.getAsJsonObject)
       .map(_.getAsJsonPrimitive("predicate"))
       .map(_.getAsString)
+      .filterNot(_.startsWith("dgraph.graphql."))
       .toSet
 
 }

@@ -30,7 +30,7 @@ import scala.sys.process.{Process, ProcessLogger}
 
 trait DgraphTestCluster extends BeforeAndAfterAll { this: Suite =>
 
-  val clusterVersion = "20.03.0"
+  val clusterVersion = "20.03.3"
   val clusterAlwaysStartUp = false  // ignores running cluster and starts a new if true
   val cluster: DgraphCluster = DgraphCluster(s"dgraph-unit-test-cluster-${UUID.randomUUID()}", clusterVersion)
   def clusterTarget: String = cluster.grpc

@@ -15,10 +15,10 @@ class TestGraphTableModel extends FunSpec {
     it("should read empty result") {
       val results = Map(
         """{
-          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0)
-          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0)
+          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) {
+          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |    <edge> { uid }
@@ -30,10 +30,10 @@ class TestGraphTableModel extends FunSpec {
     it("should read empty chunk") {
       val results = Map(
         """{
-          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0)
-          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0)
+          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) {
+          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |    <edge> { uid }
@@ -59,10 +59,10 @@ class TestGraphTableModel extends FunSpec {
             |}
             |""".stripMargin,
         """{
-          |  pred1 as var(func: has(<prop>), first: 3, after: 0x125)
-          |  pred2 as var(func: has(<edge>), first: 3, after: 0x125)
+          |  pred1 as var(func: has(<prop>), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<edge>), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2), first: 3, after: 0x125) {
+          |  result (func: uid(pred1,pred2), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |    <edge> { uid }
@@ -81,10 +81,10 @@ class TestGraphTableModel extends FunSpec {
     it("should read all chunks") {
       val results = Map(
         """{
-          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0)
-          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0)
+          |  pred1 as var(func: has(<prop>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<edge>), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) {
+          |  result (func: uid(pred1,pred2), first: 3, after: 0x0) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |    <edge> { uid }
@@ -110,10 +110,10 @@ class TestGraphTableModel extends FunSpec {
             |}
             |""".stripMargin,
         """{
-          |  pred1 as var(func: has(<prop>), first: 3, after: 0x125)
-          |  pred2 as var(func: has(<edge>), first: 3, after: 0x125)
+          |  pred1 as var(func: has(<prop>), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<edge>), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2), first: 3, after: 0x125) {
+          |  result (func: uid(pred1,pred2), first: 3, after: 0x125) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |    <edge> { uid }

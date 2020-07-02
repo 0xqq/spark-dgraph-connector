@@ -31,7 +31,7 @@ case class PartitionQuery(resultName: String, predicates: Option[Set[Predicate]]
     predicates
       .getOrElse(Set.empty)
       .zipWithIndex
-      .map { case (pred, idx) => s"pred${idx+1}" -> s"pred${idx+1} as var(func: has(<${pred.predicateName}>)${getChunkString(chunk)})" }
+      .map { case (pred, idx) => s"pred${idx+1}" -> s"""pred${idx+1} as var(func: has(<${pred.predicateName}>)${getChunkString(chunk)}) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))""" }
       .toMap
 
   val predicatePaths: Seq[String] =
@@ -47,9 +47,8 @@ case class PartitionQuery(resultName: String, predicates: Option[Set[Predicate]]
     val query =
       if (predicates.isEmpty) {
         s"""{
-           |  ${resultName} (func: has(dgraph.type)${getChunkString(chunk)}$pagination) {
+           |  ${resultName} (func: has(dgraph.type)${getChunkString(chunk)}$pagination) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
            |    uid
-           |    dgraph.graphql.schema
            |    dgraph.type
            |    expand(_all_)
            |  }
@@ -68,9 +67,8 @@ case class PartitionQuery(resultName: String, predicates: Option[Set[Predicate]]
     val query =
       if (predicates.isEmpty) {
         s"""{
-           |  ${resultName} (func: has(dgraph.type)${getChunkString(chunk)}$pagination) {
+           |  ${resultName} (func: has(dgraph.type)${getChunkString(chunk)}$pagination) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
            |    uid
-           |    dgraph.graphql.schema
            |    dgraph.type
            |    expand(_all_) {
            |      uid
@@ -80,7 +78,7 @@ case class PartitionQuery(resultName: String, predicates: Option[Set[Predicate]]
       } else {
         val predicateQueries = getPredicateQueries(chunk)
         s"""{${predicateQueries.values.map(query => s"\n  $query").mkString}${if(predicateQueries.nonEmpty) "\n" else ""}
-           |  ${resultName} (func: uid(${predicateQueries.keys.mkString(",")})${getChunkString(chunk)}$pagination) {
+           |  ${resultName} (func: uid(${predicateQueries.keys.mkString(",")})${getChunkString(chunk)}$pagination) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
            |    uid
            |${predicatePaths.map(path => s"    $path\n").mkString}  }
            |}""".stripMargin
@@ -93,14 +91,14 @@ case class PartitionQuery(resultName: String, predicates: Option[Set[Predicate]]
     val query =
       if (predicates.isEmpty) {
         s"""{
-           |  ${resultName} (func: has(dgraph.type)${pagination}) {
+           |  ${resultName} (func: has(dgraph.type)${pagination}) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
            |    count(uid)
            |  }
            |}""".stripMargin
       } else {
         val predicateQueries = getPredicateQueries(None)
         s"""{${predicateQueries.values.map(query => s"\n  $query").mkString}${if(predicateQueries.nonEmpty) "\n" else ""}
-           |  ${resultName} (func: uid(${predicateQueries.keys.mkString(",")})${pagination}) {
+           |  ${resultName} (func: uid(${predicateQueries.keys.mkString(",")})${pagination}) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
            |    count(uid)
            |  }
            |}""".stripMargin

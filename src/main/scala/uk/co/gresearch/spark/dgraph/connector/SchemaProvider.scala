@@ -38,8 +38,12 @@ trait SchemaProvider {
         .get("schema").getAsJsonArray.asScala
         .map(_.getAsJsonObject)
         .map(o => Predicate(o.get("predicate").getAsString, o.get("type").getAsString))
+        .filterNot(_.predicateName.startsWith("dgraph.graphql."))
         .toSet
       Schema(schema)
+    } catch {
+      // this is potentially a async exception which does not include any useful stacktrace, so we add it here
+      case e: Throwable => throw e.fillInStackTrace()
     } finally {
       channels.foreach(_.shutdown())
     }

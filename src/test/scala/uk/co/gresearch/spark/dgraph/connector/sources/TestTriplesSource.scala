@@ -263,11 +263,12 @@ class TestTriplesSource extends FunSpec
           case p: DataSourceRDDPartition => Some(p.inputPartition)
           case _ => None
         }
+
       assert(partitions === Seq(
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("revenue", "float"))), None)),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.graphql.schema", "string"), Predicate("starring", "uid"))), None)),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("starring", "uid"))), None)),
         Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("director", "uid"), Predicate("running_time", "int"))), None)),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"), Predicate("name", "string"))), None))
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"), Predicate("name", "string"))), None)),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("revenue", "float"))), None))
       ))
     }
 
@@ -309,11 +310,11 @@ class TestTriplesSource extends FunSpec
         }
 
       val expected = Seq(
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("revenue", "float"))), None)),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.graphql.schema", "string"), Predicate("starring", "uid"))), None)),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("starring", "uid"))), None)),
         Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("director", "uid"), Predicate("running_time", "int"))), None)),
         Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"), Predicate("name", "string"))), Some(UidRange(0, 5)))),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"), Predicate("name", "string"))), Some(UidRange(5, 5))))
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"), Predicate("name", "string"))), Some(UidRange(5, 5)))),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("revenue", "float"))), None))
       )
 
       assert(partitions === expected)
@@ -331,7 +332,7 @@ class TestTriplesSource extends FunSpec
           .dgraphTriples(target)
           .mapPartitions(part => Iterator(part.map(_.getLong(0)).toSet))
           .collect()
-      assert(partitions === Seq((1 to 7).toSet, (8 to 10).toSet))
+      assert(partitions === Seq((2 to 8).toSet, (9 to 11).toSet))
     }
 
   }

@@ -120,7 +120,7 @@ class TestClusterState extends FunSpec {
         "2" -> Set(Target("127.0.0.1:9080"), Target("127.0.0.1:9081"))
       ))
       assert(state.groupPredicates === Map(
-        "1" -> Set("dgraph.graphql.schema", "dgraph.type", "director"),
+        "1" -> Set("dgraph.type", "director"),
         "2" -> Set("name", "release_date", "revenue")
       ))
       assert(state.maxLeaseId === 10000)

@@ -19,9 +19,8 @@ package uk.co.gresearch.spark.dgraph.connector.sources
 
 import java.sql.Timestamp
 
-import org.apache.spark.sql.{DataFrame, Encoders, Row}
-import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.execution.datasources.v2.DataSourceRDDPartition
+import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.FunSpec
 import uk.co.gresearch.spark.SparkTestSession
 import uk.co.gresearch.spark.dgraph.DgraphTestCluster
@@ -76,16 +75,16 @@ class TestNodeSource extends FunSpec
     def doTestLoadWideNodes(load: () => DataFrame): Unit = {
       val nodes = load().collect().toSet
       val expected = Set(
-        Row(st1, null, "Film", "Star Trek: The Motion Picture", Timestamp.valueOf("1979-12-07 00:00:00.0"), 1.39E8, 132),
-        Row(leia, null, "Person", "Princess Leia", null, null, null),
-        Row(lucas, null, "Person", "George Lucas", null, null, null),
-        Row(irvin, null, "Person", "Irvin Kernshner", null, null, null),
-        Row(sw1, null, "Film", "Star Wars: Episode IV - A New Hope", Timestamp.valueOf("1977-05-25 00:00:00.0"), 7.75E8, 121),
-        Row(sw2, null, "Film", "Star Wars: Episode V - The Empire Strikes Back", Timestamp.valueOf("1980-05-21 00:00:00.0"), 5.34E8, 124),
-        Row(luke, null, "Person", "Luke Skywalker", null, null, null),
-        Row(han, null, "Person", "Han Solo", null, null, null),
-        Row(richard, null, "Person", "Richard Marquand", null, null, null),
-        Row(sw3, null, "Film", "Star Wars: Episode VI - Return of the Jedi", Timestamp.valueOf("1983-05-25 00:00:00.0"), 5.72E8, 131)
+        Row(st1, "Film", "Star Trek: The Motion Picture", Timestamp.valueOf("1979-12-07 00:00:00.0"), 1.39E8, 132),
+        Row(leia, "Person", "Princess Leia", null, null, null),
+        Row(lucas, "Person", "George Lucas", null, null, null),
+        Row(irvin, "Person", "Irvin Kernshner", null, null, null),
+        Row(sw1, "Film", "Star Wars: Episode IV - A New Hope", Timestamp.valueOf("1977-05-25 00:00:00.0"), 7.75E8, 121),
+        Row(sw2, "Film", "Star Wars: Episode V - The Empire Strikes Back", Timestamp.valueOf("1980-05-21 00:00:00.0"), 5.34E8, 124),
+        Row(luke, "Person", "Luke Skywalker", null, null, null),
+        Row(han, "Person", "Han Solo", null, null, null),
+        Row(richard, "Person", "Richard Marquand", null, null, null),
+        Row(sw3, "Film", "Star Wars: Episode VI - Return of the Jedi", Timestamp.valueOf("1983-05-25 00:00:00.0"), 5.72E8, 131)
       )
       assert(nodes === expected)
     }
@@ -248,11 +247,13 @@ class TestNodeSource extends FunSpec
           case p: DataSourceRDDPartition => Some(p.inputPartition)
           case _ => None
         }
+
+      partitions.foreach(println)
       assert(partitions === Seq(
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("running_time", "int"))), None)),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.graphql.schema", "string"), Predicate("name", "string"))), None)),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("release_date", "datetime"), Predicate("name", "string"))), None)),
         Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("dgraph.type", "string"))), None)),
-        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("revenue", "float"))), None))
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("revenue", "float"))), None)),
+        Some(Partition(Seq(Target(cluster.grpc)), Some(Set(Predicate("running_time", "int"))), None))
       ))
     }
 
@@ -268,7 +269,7 @@ class TestNodeSource extends FunSpec
           .dgraphNodes(target)
           .mapPartitions(part => Iterator(part.map(_.getLong(0)).toSet))
           .collect()
-      assert(partitions === Seq((1 to 7).toSet, (8 to 10).toSet))
+      assert(partitions === Seq((2 to 8).toSet, (9 to 11).toSet))
     }
 
   }

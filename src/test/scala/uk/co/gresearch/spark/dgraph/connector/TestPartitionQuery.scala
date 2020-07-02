@@ -37,9 +37,9 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(prop), None)
       assert(query.forProperties(None).string ===
         """{
-          |  pred1 as var(func: has(<prop>))
+          |  pred1 as var(func: has(<prop>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |  }
@@ -50,9 +50,9 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(edge), None)
       assert(query.forProperties(None).string ===
         """{
-          |  pred1 as var(func: has(<edge>))
+          |  pred1 as var(func: has(<edge>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <edge> { uid }
           |  }
@@ -63,9 +63,9 @@ class TestPartitionQuery extends FunSpec {
       val query1 = PartitionQuery("result", Some(prop), None)
       assert(query1.forProperties(None).string ===
         """{
-          |  pred1 as var(func: has(<prop>))
+          |  pred1 as var(func: has(<prop>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |  }
@@ -74,9 +74,9 @@ class TestPartitionQuery extends FunSpec {
       val query2 = PartitionQuery("result", Some(edge), None)
       assert(query2.forProperties(None).string ===
         """{
-          |  pred1 as var(func: has(<edge>))
+          |  pred1 as var(func: has(<edge>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <edge> { uid }
           |  }
@@ -87,9 +87,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, None)
       assert(query.forProperties(None).string ===
         """{
-          |  result (func: has(dgraph.type)) {
+          |  result (func: has(dgraph.type)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_)
           |  }
@@ -100,12 +99,12 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.forProperties(None).string ===
         """{
-          |  pred1 as var(func: has(<prop1>))
-          |  pred2 as var(func: has(<prop2>))
-          |  pred3 as var(func: has(<edge1>))
-          |  pred4 as var(func: has(<edge2>))
+          |  pred1 as var(func: has(<prop1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<prop2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred3 as var(func: has(<edge1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred4 as var(func: has(<edge2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2,pred3,pred4)) {
+          |  result (func: uid(pred1,pred2,pred3,pred4)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop1>
           |    <prop2>
@@ -120,9 +119,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, Some(uids))
       assert(query.forProperties(None).string ===
         """{
-          |  result (func: has(dgraph.type), first: 500, offset: 1000) {
+          |  result (func: has(dgraph.type), first: 500, offset: 1000) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_)
           |  }
@@ -134,9 +132,9 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(prop), None)
       assert(query.forProperties(Some(chunk)).string ===
         """{
-          |  pred1 as var(func: has(<prop>), first: 10, after: 0x123)
+          |  pred1 as var(func: has(<prop>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1), first: 10, after: 0x123) {
+          |  result (func: uid(pred1), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |  }
@@ -148,9 +146,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, None)
       assert(query.forProperties(Some(chunk)).string ===
         """{
-          |  result (func: has(dgraph.type), first: 10, after: 0x123) {
+          |  result (func: has(dgraph.type), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_)
           |  }
@@ -163,12 +160,12 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.forPropertiesAndEdges(Some(chunk)).string ===
         """{
-          |  pred1 as var(func: has(<prop1>), first: 10, after: 0x123)
-          |  pred2 as var(func: has(<prop2>), first: 10, after: 0x123)
-          |  pred3 as var(func: has(<edge1>), first: 10, after: 0x123)
-          |  pred4 as var(func: has(<edge2>), first: 10, after: 0x123)
+          |  pred1 as var(func: has(<prop1>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<prop2>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred3 as var(func: has(<edge1>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred4 as var(func: has(<edge2>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2,pred3,pred4), first: 10, after: 0x123) {
+          |  result (func: uid(pred1,pred2,pred3,pred4), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop1>
           |    <prop2>
@@ -183,9 +180,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, None)
       assert(query.forPropertiesAndEdges(Some(chunk)).string ===
         """{
-          |  result (func: has(dgraph.type), first: 10, after: 0x123) {
+          |  result (func: has(dgraph.type), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_) {
           |      uid
@@ -198,9 +194,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, None)
       assert(query.forPropertiesAndEdges(None).string ===
         """{
-          |  result (func: has(dgraph.type)) {
+          |  result (func: has(dgraph.type)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_) {
           |      uid
@@ -214,9 +209,8 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, Some(uids))
       assert(query.forPropertiesAndEdges(None).string ===
         """{
-          |  result (func: has(dgraph.type), first: 500, offset: 1000) {
+          |  result (func: has(dgraph.type), first: 500, offset: 1000) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
-          |    dgraph.graphql.schema
           |    dgraph.type
           |    expand(_all_) {
           |      uid
@@ -229,12 +223,12 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.forPropertiesAndEdges(None).string ===
         """{
-          |  pred1 as var(func: has(<prop1>))
-          |  pred2 as var(func: has(<prop2>))
-          |  pred3 as var(func: has(<edge1>))
-          |  pred4 as var(func: has(<edge2>))
+          |  pred1 as var(func: has(<prop1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<prop2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred3 as var(func: has(<edge1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred4 as var(func: has(<edge2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2,pred3,pred4)) {
+          |  result (func: uid(pred1,pred2,pred3,pred4)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop1>
           |    <prop2>
@@ -248,9 +242,9 @@ class TestPartitionQuery extends FunSpec {
       val query1 = PartitionQuery("result", Some(prop), None)
       assert(query1.forPropertiesAndEdges(None).string ===
         """{
-          |  pred1 as var(func: has(<prop>))
+          |  pred1 as var(func: has(<prop>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop>
           |  }
@@ -259,9 +253,9 @@ class TestPartitionQuery extends FunSpec {
       val query2 = PartitionQuery("result", Some(edge), None)
       assert(query2.forPropertiesAndEdges(None).string ===
         """{
-          |  pred1 as var(func: has(<edge>))
+          |  pred1 as var(func: has(<edge>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1)) {
+          |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <edge> { uid }
           |  }
@@ -273,12 +267,12 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(predicates), Some(uids))
       assert(query.forPropertiesAndEdges(None).string ===
         """{
-          |  pred1 as var(func: has(<prop1>))
-          |  pred2 as var(func: has(<prop2>))
-          |  pred3 as var(func: has(<edge1>))
-          |  pred4 as var(func: has(<edge2>))
+          |  pred1 as var(func: has(<prop1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<prop2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred3 as var(func: has(<edge1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred4 as var(func: has(<edge2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2,pred3,pred4), first: 500, offset: 1000) {
+          |  result (func: uid(pred1,pred2,pred3,pred4), first: 500, offset: 1000) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |    <prop1>
           |    <prop2>
@@ -292,7 +286,7 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(Set.empty), None)
       assert(query.forPropertiesAndEdges(None).string ===
         """{
-          |  result (func: uid()) {
+          |  result (func: uid()) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    uid
           |  }
           |}""".stripMargin)
@@ -302,7 +296,7 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", None, None)
       assert(query.countUids.string ===
         """{
-          |  result (func: has(dgraph.type)) {
+          |  result (func: has(dgraph.type)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    count(uid)
           |  }
           |}""".stripMargin)
@@ -312,7 +306,7 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(Set.empty), None)
       assert(query.countUids.string ===
         """{
-          |  result (func: uid()) {
+          |  result (func: uid()) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    count(uid)
           |  }
           |}""".stripMargin)
@@ -323,9 +317,9 @@ class TestPartitionQuery extends FunSpec {
         val query = PartitionQuery("result", Some(preds), None)
         assert(query.countUids.string ===
           s"""{
-             |  pred1 as var(func: has(<${preds.head.predicateName}>))
+             |  pred1 as var(func: has(<${preds.head.predicateName}>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
              |
-             |  result (func: uid(pred1)) {
+             |  result (func: uid(pred1)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
              |    count(uid)
              |  }
              |}""".stripMargin)
@@ -336,12 +330,12 @@ class TestPartitionQuery extends FunSpec {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.countUids.string ===
         """{
-          |  pred1 as var(func: has(<prop1>))
-          |  pred2 as var(func: has(<prop2>))
-          |  pred3 as var(func: has(<edge1>))
-          |  pred4 as var(func: has(<edge2>))
+          |  pred1 as var(func: has(<prop1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred2 as var(func: has(<prop2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred3 as var(func: has(<edge1>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
+          |  pred4 as var(func: has(<edge2>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))
           |
-          |  result (func: uid(pred1,pred2,pred3,pred4)) {
+          |  result (func: uid(pred1,pred2,pred3,pred4)) @filter(NOT(eq(dgraph.type, "dgraph.graphql"))) {
           |    count(uid)
           |  }
           |}""".stripMargin)
@@ -360,27 +354,27 @@ class TestPartitionQuery extends FunSpec {
     it("should use single predicate query for for single predicate") {
       Seq(prop, edge).foreach { preds =>
         val query = PartitionQuery("result", Some(preds), None)
-        assert(query.getPredicateQueries(None) === Map("pred1" -> s"pred1 as var(func: has(<${preds.head.predicateName}>))"))
+        assert(query.getPredicateQueries(None) === Map("pred1" -> s"""pred1 as var(func: has(<${preds.head.predicateName}>)) @filter(NOT(eq(dgraph.type, "dgraph.graphql")))"""))
       }
     }
 
     it("should use multiple predicate queries for multiple predicates") {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.getPredicateQueries(None) === Map(
-        "pred1" -> "pred1 as var(func: has(<prop1>))",
-        "pred2" -> "pred2 as var(func: has(<prop2>))",
-        "pred3" -> "pred3 as var(func: has(<edge1>))",
-        "pred4" -> "pred4 as var(func: has(<edge2>))",
+        "pred1" -> "pred1 as var(func: has(<prop1>)) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred2" -> "pred2 as var(func: has(<prop2>)) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred3" -> "pred3 as var(func: has(<edge1>)) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred4" -> "pred4 as var(func: has(<edge2>)) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
       ))
     }
 
     it("should chunk predicate queries") {
       val query = PartitionQuery("result", Some(predicates), None)
       assert(query.getPredicateQueries(Some(Chunk(Uid("0x123"), 10))) === Map(
-        "pred1" -> "pred1 as var(func: has(<prop1>), first: 10, after: 0x123)",
-        "pred2" -> "pred2 as var(func: has(<prop2>), first: 10, after: 0x123)",
-        "pred3" -> "pred3 as var(func: has(<edge1>), first: 10, after: 0x123)",
-        "pred4" -> "pred4 as var(func: has(<edge2>), first: 10, after: 0x123)",
+        "pred1" -> "pred1 as var(func: has(<prop1>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred2" -> "pred2 as var(func: has(<prop2>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred3" -> "pred3 as var(func: has(<edge1>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
+        "pred4" -> "pred4 as var(func: has(<edge2>), first: 10, after: 0x123) @filter(NOT(eq(dgraph.type, \"dgraph.graphql\")))",
       ))
     }
 
