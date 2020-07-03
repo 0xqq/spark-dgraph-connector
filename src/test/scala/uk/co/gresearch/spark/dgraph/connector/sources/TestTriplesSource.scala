@@ -19,12 +19,17 @@ package uk.co.gresearch.spark.dgraph.connector.sources
 
 import java.sql.Timestamp
 
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.execution.datasources.v2.DataSourceRDDPartition
+import org.apache.spark.sql
+import org.apache.spark.sql.catalyst.expressions.{And, AttributeReference, EqualTo, Expression, In, IsNotNull, Literal}
+import org.apache.spark.sql.catalyst.plans.logical
+import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.execution.datasources.v2.{DataSourceRDDPartition, DataSourceV2ScanRelation}
+import org.apache.spark.sql.types.StringType
 import org.scalatest.{Assertions, FunSpec}
 import uk.co.gresearch.spark.SparkTestSession
 import uk.co.gresearch.spark.dgraph.DgraphTestCluster
 import uk.co.gresearch.spark.dgraph.connector._
+import uk.co.gresearch.spark.dgraph.connector.partitioner.PredicatePartitioner
 
 class TestTriplesSource extends FunSpec
   with SparkTestSession with DgraphTestCluster {
@@ -252,13 +257,12 @@ class TestTriplesSource extends FunSpec
     }
 
     it("should load as predicate partitions") {
-      val target = cluster.grpc
       val partitions =
         spark
           .read
           .option(PartitionerOption, PredicatePartitionerOption)
           .option(PredicatePartitionerPredicatesOption, "2")
-          .dgraphTriples(target)
+          .dgraphTriples(cluster.grpc)
           .rdd
           .partitions.map {
           case p: DataSourceRDDPartition => Some(p.inputPartition)
@@ -277,13 +281,12 @@ class TestTriplesSource extends FunSpec
     }
 
     it("should load as uid-range partitions") {
-      val target = cluster.grpc
       val partitions =
         spark
           .read
           .option(PartitionerOption, s"$UidRangePartitionerOption")
           .option(UidRangePartitionerUidsPerPartOption, "7")
-          .dgraphTriples(target)
+          .dgraphTriples(cluster.grpc)
           .rdd
           .partitions.map {
           case p: DataSourceRDDPartition => Some(p.inputPartition)
@@ -299,14 +302,13 @@ class TestTriplesSource extends FunSpec
     }
 
     it("should load as predicate uid-range partitions") {
-      val target = cluster.grpc
       val partitions =
         spark
           .read
           .option(PartitionerOption, s"$PredicatePartitionerOption+$UidRangePartitionerOption")
           .option(PredicatePartitionerPredicatesOption, "2")
           .option(UidRangePartitionerUidsPerPartOption, "5")
-          .dgraphTriples(target)
+          .dgraphTriples(cluster.grpc)
           .rdd
           .partitions.map {
           case p: DataSourceRDDPartition => Some(p.inputPartition)
@@ -329,7 +331,6 @@ class TestTriplesSource extends FunSpec
     }
 
     it("should partition data") {
-      val target = cluster.grpc
       val partitions =
         spark
           .read
@@ -337,10 +338,93 @@ class TestTriplesSource extends FunSpec
             PartitionerOption -> UidRangePartitionerOption,
             UidRangePartitionerUidsPerPartOption -> "7"
           ))
-          .dgraphTriples(target)
+          .dgraphTriples(cluster.grpc)
           .mapPartitions(part => Iterator(part.map(_.getLong(0)).toSet))
           .collect()
       assert(partitions === allUids.grouped(7).map(_.toSet).toSeq)
+    }
+
+    val triples =
+      spark
+        .read
+        .option(PartitionerOption, PredicatePartitionerOption)
+        .option(PredicatePartitionerPredicatesOption, "2")
+        .dgraphTriples(cluster.grpc)
+
+    it("should push predicate filters") {
+      doTestFilterPushDown($"predicate" === "name", Seq(PredicateNameIsIn(Set("name"))))
+      doTestFilterPushDown($"predicate".isin("name"), Seq(PredicateNameIsIn(Set("name"))))
+      doTestFilterPushDown($"predicate".isin("name", "starring"), Seq(PredicateNameIsIn(Set("name", "starring"))))
+    }
+
+    it("should push object type filters") {
+      doTestFilterPushDown($"objectType" === "string", Seq(ObjectTypeIsIn(Set("string"))))
+      doTestFilterPushDown($"objectType".isin("string"), Seq(ObjectTypeIsIn(Set("string"))))
+      doTestFilterPushDown($"objectType".isin("string", "uid"), Seq(ObjectTypeIsIn(Set("string", "uid"))))
+    }
+
+    it("should push object value filters") {
+      doTestFilterPushDown(
+        $"objectString" === "Person",
+        Seq(ObjectValueIsIn(Set("Person")), ObjectTypeIsIn(Set("string"))),
+        Seq(
+          IsNotNull(AttributeReference("objectString", StringType, nullable = true)()),
+          EqualTo(AttributeReference("objectString", StringType, nullable = true)(), Literal("Person"))
+        )
+      )
+      doTestFilterPushDown(
+        $"objectString".isin("Person"),
+        Seq(ObjectValueIsIn(Set("Person")), ObjectTypeIsIn(Set("string"))),
+        Seq(
+          IsNotNull(AttributeReference("objectString", StringType, nullable = true)()),
+          EqualTo(AttributeReference("objectString", StringType, nullable = true)(), Literal("Person"))
+        )
+      )
+      doTestFilterPushDown(
+        $"objectString".isin("Person", "Film"),
+        Seq(ObjectValueIsIn(Set("Person", "Film")), ObjectTypeIsIn(Set("string"))),
+        Seq(
+          In(AttributeReference("objectString", StringType, nullable = true)(), Seq(Literal("Person"), Literal("Film")))
+        )
+      )
+      doTestFilterPushDown(
+        $"objectString" === "Person" && $"objectUid" === 1,
+        Seq(ObjectValueIsIn(Set("Person")), ObjectTypeIsIn(Set("string")), ObjectValueIsIn(Set("1")), ObjectTypeIsIn(Set("uid"))),
+        Seq(
+          IsNotNull(AttributeReference("objectString", StringType, nullable = true)()),
+          IsNotNull(AttributeReference("objectUid", StringType, nullable = true)()),
+          EqualTo(AttributeReference("objectString", StringType, nullable = true)(), Literal("Person")),
+          EqualTo(AttributeReference("objectUid", StringType, nullable = true)(), Literal(1L))
+        )
+      )
+    }
+
+    def doTestFilterPushDown(condition: Column, expected: Seq[Filter], expectedUnpushed: Seq[Expression]=Seq.empty): Unit = {
+      val df =triples.where(condition)
+
+      val plan = df.queryExecution.optimizedPlan
+      val relationNode = plan match {
+        case filter: logical.Filter =>
+          val unpushedFilters = getFilterNodes(filter.condition)
+          assert(unpushedFilters.map(_.sql) === expectedUnpushed.map(_.sql))
+          filter.child
+        case _ => plan
+      }
+      assert(relationNode.isInstanceOf[DataSourceV2ScanRelation])
+
+      val relation = relationNode.asInstanceOf[DataSourceV2ScanRelation]
+      assert(relation.scan.isInstanceOf[TripleScan])
+
+      val scan = relation.scan.asInstanceOf[TripleScan]
+      assert(scan.partitioner.isInstanceOf[PredicatePartitioner])
+
+      val partitioner = scan.partitioner.asInstanceOf[PredicatePartitioner]
+      assert(partitioner.filters.toSet === expected.toSet)
+    }
+
+    def getFilterNodes(node: Expression): Seq[Expression] = node match {
+      case And(left, right) => getFilterNodes(left) ++ getFilterNodes(right)
+      case _ => Seq(node)
     }
 
   }

@@ -23,7 +23,7 @@ import io.dgraph.DgraphGrpc.DgraphStub
 import io.dgraph.{DgraphClient, DgraphGrpc}
 import io.grpc.ManagedChannel
 import io.grpc.netty.NettyChannelBuilder
-import org.apache.spark.sql.{DataFrame, DataFrameReader, Dataset, Encoder, Encoders}
+import org.apache.spark.sql.{DataFrame, DataFrameReader, Encoder, Encoders}
 
 package object connector {
 
