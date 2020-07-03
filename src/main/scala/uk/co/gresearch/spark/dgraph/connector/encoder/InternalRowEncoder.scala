@@ -24,6 +24,14 @@ trait InternalRowEncoder {
   def readSchema(): StructType
 
   /**
+   * Sets the schema of this encoder. This encoder may only partially or not at all use the given schema.
+   * Default implementation ignores the given schema completely
+   * @param schema a schema
+   * @return encoder with the given schema
+   */
+  def withSchema(schema: StructType): InternalRowEncoder = this
+
+  /**
    * Encodes the given Dgraph json result into InternalRows.
    *
    * @param json Json result

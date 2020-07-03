@@ -34,6 +34,21 @@ trait GraphTableModel {
   def readSchema(): StructType = encoder.readSchema()
 
   /**
+   * Sets the schema of this model. This model may only partially or not at all use the given schema.
+   * @param schema a schema
+   * @return model with the given schema
+   */
+  def withSchema(schema: StructType): GraphTableModel =
+    withEncoder(encoder.withSchema(schema))
+
+  /**
+   * Sets the encoder of this model. Returns a copy of this model with the new encoder set.
+   * @param encoder an encoder
+   * @return model with the given encoder
+   */
+  def withEncoder(encoder: InternalRowEncoder): GraphTableModel = this
+
+  /**
    * Models the data of a partition in tabular form of InternalRows.
    *
    * @param partition a partition

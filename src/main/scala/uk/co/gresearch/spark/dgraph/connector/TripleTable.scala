@@ -22,7 +22,6 @@ import java.util.UUID
 import org.apache.spark.sql.connector.read.ScanBuilder
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
-import uk.co.gresearch.spark.dgraph.connector.encoder.TripleEncoder
 import uk.co.gresearch.spark.dgraph.connector.model.GraphTableModel
 import uk.co.gresearch.spark.dgraph.connector.partitioner.Partitioner
 
@@ -31,6 +30,6 @@ class TripleTable(partitioner: Partitioner, model: GraphTableModel, val cid: UUI
   override def schema(): StructType = model.schema()
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder =
-    new TripleScanBuilder(partitioner, model)
+    TripleScanBuilder(partitioner, model)
 
 }

@@ -73,6 +73,8 @@ trait JsonNodeInternalRowEncoder extends InternalRowEncoder {
    */
   def getValue(value: JsonElement, valueType: String): Any =
     valueType match {
+      // the uid of a node, the subject of a triple
+      case "subject" => Uid(value.getAsString)
       // https://dgraph.io/docs/query-language/#schema-types
       case "uid" => Uid(value.getAsJsonObject.get("uid").getAsString)
       case "string" => value.getAsString

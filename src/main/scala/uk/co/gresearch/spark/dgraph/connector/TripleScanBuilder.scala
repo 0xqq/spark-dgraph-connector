@@ -17,11 +17,20 @@
 
 package uk.co.gresearch.spark.dgraph.connector
 
-import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
-import uk.co.gresearch.spark.dgraph.connector.encoder.TripleEncoder
+import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
+import org.apache.spark.sql.sources.Filter
+import org.apache.spark.sql.types.StructType
 import uk.co.gresearch.spark.dgraph.connector.model.GraphTableModel
 import uk.co.gresearch.spark.dgraph.connector.partitioner.Partitioner
 
-class TripleScanBuilder(partitioner: Partitioner, model: GraphTableModel) extends ScanBuilder {
-  override def build(): Scan = new TripleScan(partitioner, model)
+case class TripleScanBuilder(partitioner: Partitioner, model: GraphTableModel) extends ScanBuilder
+  with SupportsPushDownRequiredColumns {
+
+  var requiredSchema: Option[StructType] = None
+
+  override def pruneColumns(requiredSchema: StructType): Unit =
+    this.requiredSchema = Some(requiredSchema)
+
+  override def build(): Scan = new TripleScan(partitioner, requiredSchema.fold(model)(model.withSchema))
+
 }

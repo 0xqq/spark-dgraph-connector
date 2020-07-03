@@ -272,6 +272,19 @@ class TestNodeSource extends FunSpec
       assert(partitions === Seq((2 to 8).toSet, (9 to 11).toSet))
     }
 
+    it("should prune columns for wide nodes") {
+      val df =
+        spark
+          .read
+          .option(NodesModeOption, NodesModeWideOption)
+          .dgraphNodes(cluster.grpc)
+          .select("uid", "`dgraph.type`", "name")
+
+      df.printSchema()
+      df.show(false)
+      df.queryExecution.sparkPlan.foreach(println)
+      df.queryExecution.executedPlan.foreach(println)
+    }
   }
 
 }

@@ -24,33 +24,39 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import uk.co.gresearch.spark.dgraph.connector.{Geo, Json, Password, Predicate, Uid}
+import uk.co.gresearch.spark.dgraph.connector.{Geo, Password, Predicate, Uid}
 
 import scala.collection.JavaConverters._
 
 /**
  * Encodes nodes as wide InternalRows from Dgraph json results.
+ * With a projected schema the readSchema differs from the actual stored schema.
  */
-case class WideNodeEncoder(predicates: Map[String, Predicate]) extends JsonNodeInternalRowEncoder {
+case class WideNodeEncoder(predicates: Map[String, Predicate], projectedSchema: Option[StructType]=None) extends JsonNodeInternalRowEncoder {
+
+  val allPredicates: Map[String, Predicate] = Map("uid" -> Predicate("uid", "subject")) ++ predicates
 
   /**
    * Returns the schema of this table. If the table is not readable and doesn't have a schema, an
    * empty schema can be returned here.
    * From: org.apache.spark.sql.connector.catalog.Table.schema
    */
-  override val schema: StructType = WideNodeEncoder.schema(predicates)
+  override val schema: StructType = WideNodeEncoder.schema(allPredicates)
 
   /**
    * Returns the actual schema of this data source scan, which may be different from the physical
    * schema of the underlying storage, as column pruning or other optimizations may happen.
    * From: org.apache.spark.sql.connector.read.Scan.readSchema
    */
-  override val readSchema: StructType = schema
+  override val readSchema: StructType = projectedSchema.getOrElse(schema)
+
+  override def withSchema(schema: StructType): InternalRowEncoder =
+    copy(projectedSchema = Some(schema))
 
   /**
-   * 1-based dense column indices for predicate names.
+   * Column indices for all columns names in read schema.
    */
-  val columns: Map[String, Int] = schema.fields.zipWithIndex.map{ case (p, i) => (p.name, i) }.drop(1).toMap
+  val columns: Map[String, Int] = readSchema.fields.zipWithIndex.map{ case (p, i) => (p.name, i) }.toMap
 
   /**
    * Encodes the given Dgraph json result into InternalRows.
@@ -68,18 +74,14 @@ case class WideNodeEncoder(predicates: Map[String, Predicate]) extends JsonNodeI
    * @return InternalRows
    */
   def toNode(node: JsonObject): InternalRow = {
-    val uidString = node.remove("uid").getAsString
-    val uid = Uid(uidString)
-
-    val values = Array.fill[Any](columns.size + 1)(null)
-    values(0) = uid.uid
+    val values = Array.fill[Any](columns.size)(null)
 
     // put all values into corresponding columns of 'values'
     node.entrySet().iterator().asScala
       .map { e =>
         (
           columns.get(e.getKey),
-          predicates.get(e.getKey).map(_.typeName),
+          allPredicates.get(e.getKey).map(_.typeName),
           e.getValue,
         )
       }
@@ -88,6 +90,8 @@ case class WideNodeEncoder(predicates: Map[String, Predicate]) extends JsonNodeI
         val obj = getValue(o, t)
         val objectValue = t match {
           case "string" => UTF8String.fromString(obj.asInstanceOf[String])
+          case "subject" => obj.asInstanceOf[Uid].uid
+          case "uid" => obj.asInstanceOf[Uid].uid
           case "int" => obj
           case "float" => obj
           case "datetime" => DateTimeUtils.fromJavaTimestamp(obj.asInstanceOf[Timestamp])
@@ -112,8 +116,8 @@ object WideNodeEncoder {
 
   def schema(predicates: Seq[Predicate]): StructType =
     StructType(
-      Seq(StructField("subject", LongType, nullable = false))
-        ++ predicates.sortBy(_.predicateName).map(toStructField)
+      Seq(StructField("uid", LongType, nullable = false))
+        ++ predicates.filterNot(_.predicateName == "uid").sortBy(_.predicateName).map(toStructField)
     )
 
   /**
@@ -123,6 +127,7 @@ object WideNodeEncoder {
    */
   def toStructField(predicate: Predicate): StructField = {
     val dType = predicate.typeName match {
+      case "subject" => LongType
       case "uid" => LongType
       case "string" => StringType
       case "int" => LongType
