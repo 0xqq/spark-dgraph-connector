@@ -159,7 +159,7 @@ class TestGraphTableModel extends FunSpec {
 
       val rowEncoder = StringTripleEncoder(predicates)
       val model = TestModel(executionProvider, rowEncoder, Some(size))
-      val partition = Partition(targets, Some(predicates.values.toSet), None)
+      val partition = Partition(targets, Some(predicates.values.toSet), None, None)
 
       val rows = model.readChunks(partition, size).toSeq
       assert(rows === expected)

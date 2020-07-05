@@ -69,7 +69,7 @@ class TestUidRangePartitioner extends FunSpec {
           assert(uidPartitions.length === partitions.length * ranges.length)
           val expectedPartitions = partitions.flatMap( partition =>
             ranges.zipWithIndex.map { case (range, idx) =>
-              Partition(partition.targets.rotateLeft(idx), partition.predicates, Some(range))
+              Partition(partition.targets.rotateLeft(idx), partition.predicates, Some(range), None)
             }
           )
 
@@ -90,7 +90,7 @@ class TestUidRangePartitioner extends FunSpec {
         assert(uidPartitions.length === partitions.length * ranges.length)
         val expectedPartitions = partitions.flatMap( partition =>
           ranges.zipWithIndex.map { case (range, idx) =>
-            Partition(partition.targets.rotateLeft(idx), partition.predicates, Some(range))
+            Partition(partition.targets.rotateLeft(idx), partition.predicates, Some(range), None)
           }
         )
 
