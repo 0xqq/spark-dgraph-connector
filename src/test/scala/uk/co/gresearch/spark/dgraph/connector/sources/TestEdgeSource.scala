@@ -198,7 +198,7 @@ class TestEdgeSource extends FunSpec
       assert(partitions === expected)
     }
 
-    val edges =
+    lazy val edges =
       spark
         .read
         .options(Map(
