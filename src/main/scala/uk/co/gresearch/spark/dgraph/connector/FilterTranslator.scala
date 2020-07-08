@@ -13,8 +13,8 @@ case class FilterTranslator(columnInfo: ColumnInfo) {
    * @return Some dgraph filters
    */
   def translate(filter: sql.sources.Filter): Option[Seq[Filter]] = filter match {
-    case IsNotNull(column) if columnInfo.isPredicateValueColumn(column) =>
-      Some(Seq(PredicateNameIsIn(column)))
+//    case IsNotNull(column) if columnInfo.isPredicateValueColumn(column) =>
+//      Some(Seq(PredicateNameIsIn(column)))
     case IsNotNull(column) if columnInfo.isObjectValueColumn(column) && columnInfo.getObjectType(column).isDefined =>
       Some(Seq(ObjectTypeIsIn(columnInfo.getObjectType(column).get)))
 
@@ -22,10 +22,10 @@ case class FilterTranslator(columnInfo: ColumnInfo) {
       Some(Seq(SubjectIsIn(Uid(value.toLong))))
     case EqualTo(column, value) if columnInfo.isPredicateColumn(column) && Option(value).isDefined =>
       Some(Seq(PredicateNameIsIn(value.toString)))
-    case EqualTo(column, value) if columnInfo.isPredicateValueColumn(column) && Option(value).isDefined =>
-      Some(Seq(PredicateNameIsIn(column), ObjectValueIsIn(value)))
+//    case EqualTo(column, value) if columnInfo.isPredicateValueColumn(column) && Option(value).isDefined =>
+//      Some(Seq(PredicateNameIsIn(column), ObjectValueIsIn(value)))
     case EqualTo(column, value) if columnInfo.isObjectValueColumn(column) && Option(value).isDefined =>
-      Some(Seq(ObjectValueIsIn(value.toString)) ++ columnInfo.getObjectType(column).map(t => Seq(ObjectTypeIsIn(t))).getOrElse(Seq.empty))
+      Some(Seq(ObjectValueIsIn(value)) ++ columnInfo.getObjectType(column).map(t => Seq(ObjectTypeIsIn(t))).getOrElse(Seq.empty))
     case EqualTo(column, value) if columnInfo.isObjectTypeColumn(column) && Option(value).isDefined =>
       Some(Seq(ObjectTypeIsIn(value.toString)))
 
@@ -39,16 +39,16 @@ case class FilterTranslator(columnInfo: ColumnInfo) {
         // check for non-null null-less non-empty values array
         Option(values).map(_.filter(Option(_).isDefined)).exists(_.length > 0) =>
       Some(Seq(PredicateNameIsIn(values.map(_.toString): _*)))
-    case In(column, values)
-      if columnInfo.isPredicateValueColumn(column) &&
-        // check for non-null null-less non-empty values array
-        Option(values).map(_.filter(Option(_).isDefined)).exists(_.length > 0) =>
-      Some(Seq(PredicateNameIsIn(column), ObjectValueIsIn(values: _*)))
+//    case In(column, values)
+//      if columnInfo.isPredicateValueColumn(column) &&
+//        // check for non-null null-less non-empty values array
+//        Option(values).map(_.filter(Option(_).isDefined)).exists(_.length > 0) =>
+//      Some(Seq(PredicateNameIsIn(column), ObjectValueIsIn(values: _*)))
     case In(column, values)
       if columnInfo.isObjectValueColumn(column) &&
         // check for non-null null-less non-empty values array
         Option(values).map(_.filter(Option(_).isDefined)).exists(_.length > 0) =>
-      Some(Seq(ObjectValueIsIn(values.map(_.toString): _*)) ++ columnInfo.getObjectType(column).map(t => Seq(ObjectTypeIsIn(t))).getOrElse(Seq.empty))
+      Some(Seq(ObjectValueIsIn(values.toSet[Any])) ++ columnInfo.getObjectType(column).map(t => Seq(ObjectTypeIsIn(t))).getOrElse(Seq.empty))
     case In(column, values)
       if columnInfo.isObjectTypeColumn(column) &&
         // check for non-null null-less non-empty values array

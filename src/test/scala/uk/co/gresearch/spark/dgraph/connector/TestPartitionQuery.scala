@@ -28,13 +28,13 @@ class TestPartitionQuery extends FunSpec {
 
     val predicates = Set(
       Predicate("prop1", "string"),
-      Predicate("prop2", "long"),
+      Predicate("prop2", "int"),
       Predicate("edge1", "uid"),
       Predicate("edge2", "uid")
     )
 
-    val values: Map[String, Set[Any]] = Map("pred" -> Set("IGNORED"), "prop1" -> Set("value"), "edge2" -> Set(Uid("0x1")))
-    val multiValues: Map[String, Set[Any]] = Map("prop1" -> Set("one", "two"), "edge2" -> Set(Uid("0x1"), Uid("0x2")))
+    val values: Map[String, Set[Any]] = Map("pred" -> Set("IGNORED"), "prop1" -> Set("value"), "edge2" -> Set(1L))
+    val multiValues: Map[String, Set[Any]] = Map("prop1" -> Set("one", "two"), "edge2" -> Set(1L, 2L))
 
     it("should provide query for one property") {
       val query = PartitionQuery("result", Some(prop), None, None)
@@ -169,10 +169,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4), first: 10, after: 0x123) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "value"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1))
           |  }
           |}""".stripMargin)
     }
@@ -188,10 +188,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4)) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "value"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1))
           |  }
           |}""".stripMargin)
     }
@@ -207,10 +207,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4)) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "one") OR eq(<prop1>, "two"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1, 0x2))
           |  }
           |}""".stripMargin)
     }
@@ -227,10 +227,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4)) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "value"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1))
           |  }
           |}""".stripMargin)
     }
@@ -246,10 +246,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4)) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "one") OR eq(<prop1>, "two"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1, 0x2))
           |  }
           |}""".stripMargin)
     }
@@ -266,10 +266,10 @@ class TestPartitionQuery extends FunSpec {
           |
           |  result (func: uid(pred1,pred2,pred3,pred4), first: 10, after: 0x123) {
           |    uid
-          |    <prop1>
+          |    <prop1> @filter(eq(<prop1>, "value"))
           |    <prop2>
           |    <edge1> { uid }
-          |    <edge2> { uid }
+          |    <edge2> { uid } @filter(uid(0x1))
           |  }
           |}""".stripMargin)
     }

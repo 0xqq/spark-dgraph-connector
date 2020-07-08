@@ -28,7 +28,7 @@ class TestUidRangePartitioner extends FunSpec {
 
   describe("UidRangePartitioner") {
 
-    val schema = Schema(Set(Predicate(s"pred1", s"type1"), Predicate(s"pred2", s"type2")))
+    val schema = Schema(Set(Predicate("pred1", "type1", "type1"), Predicate("pred2", "type2", "type2")))
     val clusterState = ClusterState(
       Map(
         "1" -> Set(Target("host1:9080"), Target("host2:9080")),

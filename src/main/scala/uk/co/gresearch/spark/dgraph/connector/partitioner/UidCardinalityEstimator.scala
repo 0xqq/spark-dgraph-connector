@@ -32,7 +32,7 @@ abstract class UidCardinalityEstimatorBase extends UidCardinalityEstimator {
    * @return estimated number of uids or None
    */
   override def uidCardinality(partition: Partition): Option[Long] = partition match {
-    case Partition(_, _, Some(UidRange(_, length))) => Some(length)
+    case Partition(_, _, Some(UidRange(_, length)), None) => Some(length)
     case _ => None
   }
 
